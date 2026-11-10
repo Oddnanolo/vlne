@@ -88,7 +88,7 @@ PARTICLE_COLS = {
     "particle.KE": "KE", "particle.depth": "depth", "particle.is_pseudo": "is_pseudo",
 }
 
-Selection = collections.namedtuple("Selection", ["flavors", "current", "min_iou"])
+Selection = collections.namedtuple("Selection", ["flavors", "current", "min_iou", "contain"])
 
 
 def add_pdg_onehot(df):
@@ -212,6 +212,8 @@ def select_candidates(t, sel):
     keep &= ((cand["ccnc"] == 0) == (sel.current == "cc")).to_numpy()
     keep &= in_active_volume(cand)
     keep &= (cand["numu_cc_flag"] >= 0).to_numpy()
+    if sel.contain != "all":
+        keep &= ((cand['match_isFC'] ==1) == (sel.contain == "fc")).to_numpy()
     cand = cand[keep]
 
     # lepton of the neutrino's own flavor: muon for numu, electron for nue
@@ -345,6 +347,8 @@ def main():
     ap.add_argument("--flavor", nargs="+", choices=list(FLAVOR_PDG), default=["numu"],
                     help="true neutrino flavor(s) to keep (default numu)")
     ap.add_argument("--current", choices=["cc", "nc"], default="cc", help="true current (default cc)")
+    ap.add_argument("--contain", choices=['all', 'fc', 'pc'], default='all', 
+                    help='containment filter: fully contained (pc), partially contained (pc), or all (default)')
     ap.add_argument("--min-iou", type=float, default=0.5,
                     help="minimum charge IoU of the reco-truth match (default 0.5)")
     ap.add_argument("-j", "--jobs", type=int, default=1, help="parallel reader processes (default 1)")
@@ -359,7 +363,7 @@ def main():
         sys.exit(f"{args.out} exists; use --force to overwrite")
 
     # start workers before opening the HDF5 file so they don't inherit its handle
-    sel = Selection(flavors=args.flavor, current=args.current, min_iou=args.min_iou)
+    sel = Selection(flavors=args.flavor, current=args.current, min_iou=args.min_iou, contain=args.contain)
     work = functools.partial(extract, sel=sel)
     pool = multiprocessing.Pool(args.jobs) if args.jobs > 1 else None
     results = pool.imap(work, files) if pool else map(work, files)

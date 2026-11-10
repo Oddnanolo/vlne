@@ -4,7 +4,7 @@ from vlne.train import create_and_train_model
 # SBND numu CC version of uboone/mcc9/final_v0.py. Dataset made with
 #   scripts/data/flatcaf_to_hdf5.py + scripts/data/shuffle.py
 config = {
-    "batch_size" : 64,
+    "batch_size" : 1024,
     "data"       : {
         "extra_vars" : {
             "flat_weight": {
@@ -19,7 +19,7 @@ config = {
         },
         "frame" : {
             "name" : "hdf-ra-frame",
-            "path" : "sbnd/train_numu_v2_shuffled.hdf",
+            "path" : "haiwang_out_numuCC_full_clean.hdf",
         },
         "input_groups_scalar" : {
             # numu only sample
@@ -55,7 +55,7 @@ config = {
         "seed"            : 0,
         "shuffle"         : False,
         "val_size"        : 0.2,
-        "test_size"       : None,
+        "test_size"       : 0.1,
         "transform_train" : [
             {
                 'name'        : 'vlarr-shuffle',
@@ -107,9 +107,9 @@ config = {
         },
     },
     'seed'            : 0,
-    'steps_per_epoch' : 500,
+    'steps_per_epoch' : 830,
     # Args:
-    'outdir'    : 'sbnd/numu_v2',
+    'outdir'    : 'sbnd_sample/numu_full_no_bad_1024',
     'log_level' : 'INFO',
 }
 
